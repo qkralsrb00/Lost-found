@@ -34,7 +34,7 @@ class CameraApp(QWidget):
             sys.exit()
 
         # 화면 업데이트
-        self.timer_id = self.startTimer(30)  # 30ms마다
+        self.timer_id = self.startTimer(30)  
 
         # 사진 저장 루트
         self.save_root = "C:/2학년/2학기/김규동/img"
