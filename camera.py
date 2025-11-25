@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLay
 from PyQt5.QtGui import QPixmap, QImage
 from datetime import datetime
 import os
+import subprocess  # Git 명령 실행용
 
 class CameraApp(QWidget):
     def __init__(self):
@@ -35,6 +36,12 @@ class CameraApp(QWidget):
         # 화면 업데이트
         self.timer_id = self.startTimer(30)  # 30ms마다
 
+        # 사진 저장 루트
+        self.save_root = "C:/2학년/2학기/김규동/img"
+
+        # Git 저장소 루트
+        self.git_root = "C:/2학년/2학기/김규동"  # 여기 Git 저장소 루트로 변경
+
     def timerEvent(self, event):
         ret, frame = self.cap.read()
         if ret:
@@ -51,7 +58,7 @@ class CameraApp(QWidget):
             now = datetime.now()
             date_str = now.strftime("%Y-%m-%d")
             time_str = now.strftime("%H-%M-%S")
-            save_dir = f"C:/2학년/2학기/김규동/img/{date_str}"
+            save_dir = os.path.join(self.save_root, date_str)
             os.makedirs(save_dir, exist_ok=True)
             save_path = os.path.join(save_dir, f"{time_str}.png")
 
@@ -61,7 +68,18 @@ class CameraApp(QWidget):
 
     def closeEvent(self, event):
         self.cap.release()
+
+        # 🔹 Git 자동 업로드
+        try:
+            subprocess.run(["git", "add", "."], cwd=self.git_root, check=True)
+            subprocess.run(["git", "commit", "-m", "자동 업로드 사진"], cwd=self.git_root, check=True)
+            subprocess.run(["git", "push"], cwd=self.git_root, check=True)
+            print("Git에 자동 푸시 완료")
+        except subprocess.CalledProcessError as e:
+            print("Git 자동 푸시 실패:", e)
+
         super().closeEvent(event)
+
 
 # 실행
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ if os.path.exists(folder_path):
     ])
 
     if img_files:
-        st.write(f"총 {len(img_files)}장 이미지 발견")
+        st.write(f"총 {len(img_files)}개의 분실물 발견")
 
         for img_file in img_files:
             img_path = os.path.join(folder_path, img_file)
