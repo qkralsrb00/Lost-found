@@ -22,7 +22,7 @@ def load_status():
 
 # ----------------- Streamlit UI -----------------
 st.markdown("<h1 style='text-align: center;'>📅 분실물 조회 시스템</h1>", unsafe_allow_html=True)
-st.header("a",divider='rainbow')
+st.header("대건고 분실물 조회 사이트",divider='rainbow')
 today_kst = datetime.now(KST).date()
 selected_date = st.date_input("날짜 선택", value=today_kst)
 
