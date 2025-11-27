@@ -4,9 +4,11 @@ import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QImage
 from datetime import datetime, timezone, timedelta
+from PyQt5.QtCore import QTimer
 import os
 import json
 from ultralytics import YOLO
+import subprocess
 
 # YOLO 모델 로드 (지갑 단일 클래스)
 model = YOLO("model/best.pt")  # 학습한 best.pt 경로
@@ -80,9 +82,17 @@ class CameraApp(QWidget):
 
         print(f"사진 저장 완료: {save_path}, 지갑 여부: {wallet_present}")
 
-    def closeEvent(self, event):
-        self.cap.release()
-        super().closeEvent(event)
+        # ------------------- 3초 후 Git 자동 업로드 -------------------
+        QTimer.singleShot(3000, lambda: self.git_push())
+
+    def git_push(self):
+        try:
+            subprocess.run(["git", "add", "."], cwd=self.save_root)
+            subprocess.run(["git", "commit", "-m", "자동 업로드 사진"], cwd=self.save_root)
+            subprocess.run(["git", "push"], cwd=self.save_root)
+            print("Git push 완료!")
+        except Exception as e:
+            print(f"Git push 중 오류 발생: {e}")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

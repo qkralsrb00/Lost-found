@@ -80,7 +80,7 @@ for item in status_data:
 
 # ----------------- 출력 -----------------
 if not wallet_items and not other_items:
-    st.warning("해당 날짜에 등록된 분실물이 없습니다.")
+    st.info("해당 날짜에 등록된 분실물이 없습니다.")
 else:
     if wallet_items:
         st.subheader("👜 지갑 이미지")
