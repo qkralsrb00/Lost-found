@@ -9,7 +9,7 @@ import json
 from ultralytics import YOLO
 
 # YOLO 모델 로드 (지갑 단일 클래스)
-model = YOLO("path/to/your/wallet_model.pt")  # 학습한 best.pt 경로
+model = YOLO("model/best.pt")  # 학습한 best.pt 경로
 
 class CameraApp(QWidget):
     def __init__(self):
@@ -28,7 +28,7 @@ class CameraApp(QWidget):
         layout.addWidget(self.btn_capture)
         self.setLayout(layout)
 
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         if not self.cap.isOpened():
             print("카메라 열기 실패")
             sys.exit()
