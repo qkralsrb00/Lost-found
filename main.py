@@ -20,6 +20,7 @@ IMG_DIR = BASE_DIR / "img"
 status_data = []
 
 def load_status():
+    """status.json 파일 읽기"""
     global status_data
     if STATUS_FILE.exists():
         try:
@@ -32,6 +33,7 @@ def load_status():
 
 # ----------------- Watchdog 이벤트 -----------------
 class StatusHandler(FileSystemEventHandler):
+    """status.json 및 이미지 변경 감지"""
     def on_modified(self, event):
         if event.src_path.endswith("status.json") or event.src_path.endswith(".png"):
             load_status()
@@ -83,7 +85,7 @@ else:
     if wallet_items:
         st.subheader("👜 지갑 이미지")
         for item in wallet_items:
-            filepath = BASE_DIR / Path(item["filepath"])
+            filepath = BASE_DIR / Path(item["filepath"].replace("\\", "/"))  # 역슬래시 처리
             if filepath.exists():
                 st.image(filepath, caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
             else:
@@ -92,7 +94,7 @@ else:
     if other_items:
         st.subheader("📦 기타 이미지")
         for item in other_items:
-            filepath = BASE_DIR / Path(item["filepath"])
+            filepath = BASE_DIR / Path(item["filepath"].replace("\\", "/"))
             if filepath.exists():
                 st.image(filepath, caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
             else:
