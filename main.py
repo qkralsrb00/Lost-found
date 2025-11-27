@@ -43,7 +43,10 @@ def start_watcher():
 load_status()
 threading.Thread(target=start_watcher, daemon=True).start()
 st.set_page_config(page_title="분실물 확인", layout="wide")
-st.title("📅 분실물 조회 시스템")
+st.markdown(
+    "<h1 style='text-align: center;'>📅 대건 분실물 조회 시스템</h1>",
+    unsafe_allow_html=True
+)
 
 today_kst = datetime.now(KST).date()
 selected_date = st.date_input("날짜 선택", value=today_kst)
