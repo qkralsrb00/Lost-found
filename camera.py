@@ -89,9 +89,12 @@ class CameraApp(QWidget):
 
     def git_push(self):
         try:
-            subprocess.run(["git", "add", "."], cwd=self.save_root)
-            subprocess.run(["git", "commit", "-m", "자동 업로드 사진"], cwd=self.save_root)
-            subprocess.run(["git", "push","--force"], cwd=self.save_root)
+            repo_root = os.path.dirname(os.path.abspath(__file__))  # 프로젝트 루트
+
+            subprocess.run(["git", "add", "."], cwd=repo_root)
+            subprocess.run(["git", "commit", "-m", "자동 업로드 사진"], cwd=repo_root)
+            subprocess.run(["git", "push"], cwd=repo_root)
+
             print("Git push 완료!")
         except Exception as e:
             print(f"Git push 중 오류 발생: {e}")
