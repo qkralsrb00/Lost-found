@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLay
 from PyQt5.QtGui import QPixmap, QImage
 from datetime import datetime, timezone, timedelta
 from PyQt5.QtCore import QTimer
-
 import json
 from ultralytics import YOLO
 import subprocess
