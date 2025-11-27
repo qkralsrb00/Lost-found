@@ -64,7 +64,7 @@ class CameraApp(QWidget):
         cv2.imencode(".png", frame)[1].tofile(save_path)
 
         # YOLO로 지갑 여부 판단
-        results = model.predict(frame, conf=0.4)
+        results = model.predict(frame, conf=0.15)
         wallet_present = False
         if results and len(results[0].boxes) > 0:
             wallet_present = True
