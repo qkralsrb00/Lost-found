@@ -23,12 +23,12 @@ class CameraApp(QWidget):
 
         # 레이아웃
         layout = QVBoxLayout()
-        layout.addWidget(self.label)
+        layout.addWidget(self.label)        
         layout.addWidget(self.btn_capture)
         self.setLayout(layout)
 
         # 카메라 열기
-        self.cap = cv2.VideoCapture(1)
+        self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("카메라 열기 실패")
             sys.exit()
