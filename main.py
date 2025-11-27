@@ -1,53 +1,30 @@
 import streamlit as st
+import time
 import json
 from datetime import datetime
-from pathlib import Path
 import pytz
-import threading
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+from pathlib import Path
 
-# ----------------- 시간대 -----------------
 KST = pytz.timezone("Asia/Seoul")
-
-# ----------------- 상태 저장 -----------------
 STATUS_FILE = "status.json"
-status_data = []
 
 def load_status():
-    global status_data
     with open(STATUS_FILE, "r", encoding="utf-8") as f:
-        status_data = json.load(f)
+        return json.load(f)
 
-# ----------------- Watchdog 이벤트 -----------------
-class StatusHandler(FileSystemEventHandler):
-    def on_modified(self, event):
-        if event.src_path.endswith("status.json") or event.src_path.endswith(".png"):
-            load_status()
+# 자동 재로드
+reload_interval = 3  # 초 단위
+last_reload = 0
 
-# ----------------- Watchdog 스레드 -----------------
-def start_watcher():
-    event_handler = StatusHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path=".", recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+if 'status_data' not in st.session_state:
+    st.session_state.status_data = load_status()
 
-# ----------------- Streamlit UI -----------------
-load_status()
-threading.Thread(target=start_watcher, daemon=True).start()
-st.set_page_config(page_title="분실물 확인", layout="wide")
-st.markdown(
-    "<h1 style='text-align: center;'>📅 대건 분실물 조회 시스템</h1>",
-    unsafe_allow_html=True
-)
+# 강제 재로드
+if time.time() - last_reload > reload_interval:
+    st.session_state.status_data = load_status()
+    last_reload = time.time()
 
+# 선택 UI
 today_kst = datetime.now(KST).date()
 selected_date = st.date_input("날짜 선택", value=today_kst)
 
@@ -55,7 +32,7 @@ selected_date = st.date_input("날짜 선택", value=today_kst)
 wallet_items = []
 other_items = []
 
-for item in status_data:
+for item in st.session_state.status_data:
     ts = datetime.strptime(item["timestamp"], "%Y-%m-%d %H:%M:%S")
     ts_kst = KST.localize(ts)
     if ts_kst.date() == selected_date:
@@ -64,15 +41,14 @@ for item in status_data:
         else:
             other_items.append(item)
 
-# ----------------- 출력 -----------------
-if not wallet_items and not other_items:
-    st.info("해당 날짜에 등록된 분실물이 없습니다.")
-else:
-    if wallet_items:
-        st.subheader("👜 지갑 이미지")
-        for item in wallet_items:
-            st.image(str(Path(item["filepath"].replace("\\", "/"))))
-    if other_items:
-        st.subheader("📦 기타 이미지")
-        for item in other_items:
-            st.image(str(Path(item["filepath"].replace("\\", "/"))))
+# 출력
+if wallet_items:
+    st.subheader("👜 지갑 이미지")
+    for item in wallet_items:
+        st.image(str(Path(item["filepath"].replace("\\", "/"))),
+                 caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
+if other_items:
+    st.subheader("📦 기타 이미지")
+    for item in other_items:
+        st.image(str(Path(item["filepath"].replace("\\", "/"))),
+                 caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
