@@ -28,7 +28,7 @@ class CameraApp(QWidget):
         self.setLayout(layout)
 
         # 카메라 열기
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         if not self.cap.isOpened():
             print("카메라 열기 실패")
             sys.exit()
