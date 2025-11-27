@@ -10,7 +10,7 @@ import torch
 import requests
 
 # 환경 설정
-SAVE_ROOT = "C:/2학년/2학기/김규동/img"  # 로컬 저장 경로
+SAVE_ROOT = "img"  # 로컬 저장 경로
 YOLO_MODEL_PATH = "C:/Users/pjh06/OneDrive/바탕 화면/김규동/runs/detect/wallet_detector6/weights/best.pt"
 STREAMLIT_UPLOAD_URL = "http://localhost:8501/upload"  # Streamlit 업로드 엔드포인트
 
