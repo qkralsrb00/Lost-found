@@ -1,81 +1,72 @@
-# streamlit_wallet_viewer.py
 import streamlit as st
+from PIL import Image
+import os
+from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import threading
 import time
-import os
-import cv2
-import numpy as np
-from datetime import datetime
-import pytz
 
-# YOLO 모델 로드 (예: yolov8)
-from ultralytics import YOLO
-model = YOLO("runs/detect/wallet_detector/weights/best.pt")  # 학습한 지갑 단일 클래스 모델
-
-# 이미지 저장 폴더
-IMG_ROOT = "C:/2학년/2학기/김규동/img"
-
-# 지갑 사진 우선 리스트
-wallet_images = []
-other_images = []
+# 이미지 저장 루트
+IMAGE_ROOT = "C:/2학년/2학기/김규동/img"
 
 # Streamlit UI
-st.title("실시간 지갑 확인")
-date_selected = st.date_input("날짜 선택", datetime.now().date())
+st.title("분실물 확인")
+selected_date = st.date_input("날짜 선택", datetime.now())
 
-container = st.empty()
+date_str = selected_date.strftime("%Y-%m-%d")
+folder_path = os.path.join(IMAGE_ROOT, date_str)
 
-# 폴더 감시용 이벤트 핸들러
-class ImgHandler(FileSystemEventHandler):
+# 이미지 리스트 초기화
+image_files = []
+
+# 파일 변경 감지 핸들러
+class ImageHandler(FileSystemEventHandler):
     def on_created(self, event):
+        global image_files
         if event.is_directory:
             return
         if event.src_path.lower().endswith((".png", ".jpg", ".jpeg")):
-            process_image(event.src_path)
+            image_files.append(event.src_path)
+            st.experimental_rerun()  # 새 이미지 생기면 갱신
 
-# 이미지 처리
-def process_image(path):
-    img = cv2.imread(path)
-    results = model(img)[0]
-
-    # 지갑 단일 클래스 = class 0
-    is_wallet = any(int(box.cls) == 0 for box in results.boxes)
-    
-    # 한국 표준시 기준 파일 시간
-    tz = pytz.timezone("Asia/Seoul")
-    file_time = datetime.fromtimestamp(os.path.getmtime(path), tz=tz)
-
-    # 선택된 날짜와 맞는지 확인
-    if file_time.date() != date_selected:
-        return
-
-    if is_wallet:
-        wallet_images.insert(0, path)  # 맨 위
-    else:
-        other_images.append(path)      # 아래
-
-# Watchdog 스레드
-def start_watchdog():
-    event_handler = ImgHandler()
-    observer = Observer()
-    observer.schedule(event_handler, IMG_ROOT, recursive=True)
+# Watchdog 설정
+observer = Observer()
+if os.path.exists(folder_path):
+    event_handler = ImageHandler()
+    observer.schedule(event_handler, folder_path, recursive=False)
     observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
+
+# 해당 날짜 폴더가 없거나 비어있으면 안내
+if not os.path.exists(folder_path):
+    st.info("선택한 날짜에는 이미지가 없습니다.")
+else:
+    image_files = sorted(
+        [
+            os.path.join(folder_path, f)
+            for f in os.listdir(folder_path)
+            if f.lower().endswith((".png", ".jpg", ".jpeg"))
+        ]
+    )
+    if not image_files:
+        st.info("선택한 날짜에는 이미지가 없습니다.")
+    else:
+        # 지갑 이미지 먼저
+        wallet_images = [f for f in image_files if "wallet" in f.lower()]
+        other_images = [f for f in image_files if "wallet" not in f.lower()]
+
+        st.subheader("지갑 이미지")
+        for img_path in wallet_images:
+            img = Image.open(img_path)
+            st.image(img, caption=os.path.basename(img_path))
+
+        st.subheader("기타 이미지")
+        for img_path in other_images:
+            img = Image.open(img_path)
+            st.image(img, caption=os.path.basename(img_path))
+
+# 앱 종료 시 observer 정리
+def stop_observer():
+    observer.stop()
     observer.join()
 
-# Watchdog 별도 스레드 실행
-threading.Thread(target=start_watchdog, daemon=True).start()
-
-# Streamlit 갱신
-while True:
-    all_images = wallet_images + other_images
-    with container.container():
-        for img_path in all_images:
-            st.image(img_path, use_column_width=True)
-    time.sleep(1)
+st.on_session_end(stop_observer)
