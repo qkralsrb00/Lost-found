@@ -20,7 +20,7 @@ def load_status():
     return []
 
 st.set_page_config(page_title="대건고 분실물 찾기", layout="wide")
-st.markdown("<h1 style='text-align: center;'>📅 대건고 분실물 조회</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>🗓️ 대건고 분실물 조회</h1>", unsafe_allow_html=True)
 
 if "view_mode" not in st.session_state:
     st.session_state.view_mode = "daily"  
