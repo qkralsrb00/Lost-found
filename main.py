@@ -8,15 +8,13 @@ KST = pytz.timezone("Asia/Seoul")
 BASE_DIR = Path(__file__).parent
 STATUS_FILE = BASE_DIR / "status.json"
 
-# ----------------- JSON 로드 -----------------
 def load_status():
-    """status.json 파일 읽기"""
     if STATUS_FILE.exists():
         try:
             with open(STATUS_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
-            st.error("status.json 읽기 실패: JSON 형식 오류")
+            st.error("json 형태 오류")
             return []
     return []
 
