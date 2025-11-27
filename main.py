@@ -68,10 +68,8 @@ else:
     if wallet_items:
         st.subheader("👜 지갑 이미지")
         for item in wallet_items:
-            st.image(str(Path(item["filepath"].replace("\\", "/"))),
-                     caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
+            st.image(str(Path(item["filepath"].replace("\\", "/"))))
     if other_items:
         st.subheader("📦 기타 이미지")
         for item in other_items:
-            st.image(str(Path(item["filepath"].replace("\\", "/"))),
-                     caption=f"지갑 여부: {item['wallet']} / {item['timestamp']}")
+            st.image(str(Path(item["filepath"].replace("\\", "/"))))
