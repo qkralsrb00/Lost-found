@@ -1,11 +1,13 @@
 import sys
+import os
+os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 import cv2
 import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QImage
 from datetime import datetime, timezone, timedelta
 from PyQt5.QtCore import QTimer
-import os
+
 import json
 from ultralytics import YOLO
 import subprocess

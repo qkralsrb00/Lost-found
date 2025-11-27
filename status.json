@@ -18,5 +18,10 @@
     "filepath": "img\\2025-11-28\\03-29-42.png",
     "wallet": false,
     "timestamp": "2025-11-28 03:29:42"
+  },
+  {
+    "filepath": "img\\2025-11-28\\07-29-22.png",
+    "wallet": true,
+    "timestamp": "2025-11-28 07:29:22"
   }
 ]
