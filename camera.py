@@ -1,30 +1,25 @@
-# Camera.py
 import sys
 import cv2
-import os
+import numpy as np
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel, QVBoxLayout
 from PyQt5.QtGui import QPixmap, QImage
-from datetime import datetime
-from zoneinfo import ZoneInfo
-import torch
-import requests
+from datetime import datetime, timezone, timedelta
+import os
+import json
+from ultralytics import YOLO
 
-# 환경 설정
-SAVE_ROOT = "img"  # 로컬 저장 경로
-YOLO_MODEL_PATH = "C:/Users/pjh06/OneDrive/바탕 화면/김규동/runs/detect/wallet_detector6/weights/best.pt"
-STREAMLIT_UPLOAD_URL = "http://localhost:8501/upload"  # Streamlit 업로드 엔드포인트
+# YOLO 모델 로드 (지갑 단일 클래스)
+model = YOLO("path/to/your/wallet_model.pt")  # 학습한 best.pt 경로
 
 class CameraApp(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("카메라 촬영 + 지갑 판정")
+        self.setWindowTitle("카메라 촬영")
         self.resize(640, 520)
 
-        # 버튼
         self.btn_capture = QPushButton("사진 찍기")
         self.btn_capture.clicked.connect(self.capture_image)
 
-        # 이미지 표시
         self.label = QLabel()
         self.label.setFixedSize(640, 480)
 
@@ -33,17 +28,14 @@ class CameraApp(QWidget):
         layout.addWidget(self.btn_capture)
         self.setLayout(layout)
 
-        # 카메라
         self.cap = cv2.VideoCapture(0)
         if not self.cap.isOpened():
             print("카메라 열기 실패")
             sys.exit()
 
         self.timer_id = self.startTimer(30)
-
-        # YOLO 모델 로드
-        self.model = torch.hub.load('ultralytics/yolov8', 'custom', path=YOLO_MODEL_PATH, source='local')
-        self.model.conf = 0.5  # 최소 신뢰도
+        self.save_root = "img"
+        self.status_file = "status.json"
 
     def timerEvent(self, event):
         ret, frame = self.cap.read()
@@ -60,40 +52,33 @@ class CameraApp(QWidget):
             return
 
         # 한국 표준시
-        now = datetime.now(ZoneInfo("Asia/Seoul"))
-        date_str = now.strftime("%Y-%m-%d")
-        time_str = now.strftime("%H-%M-%S")
-        save_dir = os.path.join(SAVE_ROOT, date_str)
+        kst = datetime.now(timezone(timedelta(hours=9)))
+        date_str = kst.strftime("%Y-%m-%d")
+        time_str = kst.strftime("%H-%M-%S")
+
+        save_dir = os.path.join(self.save_root, date_str)
         os.makedirs(save_dir, exist_ok=True)
         save_path = os.path.join(save_dir, f"{time_str}.png")
-
         cv2.imencode(".png", frame)[1].tofile(save_path)
-        print(f"[저장 완료] {save_path}")
 
-        # YOLO 지갑 판정
-        results = self.model(frame)
-        is_wallet = False
-        if len(results[0].boxes) > 0:
-            for i, cls in enumerate(results[0].boxes.cls.cpu().numpy()):
-                if int(cls) == 0:  # 지갑 클래스
-                    is_wallet = True
-                    break
+        # YOLO로 지갑 여부 판단
+        results = model.predict(frame, conf=0.5)
+        wallet_present = False
+        if results and len(results[0].boxes) > 0:
+            wallet_present = True
 
-        # Streamlit 서버 업로드
-        self.upload_to_streamlit(save_path, is_wallet)
+        # 상태 저장
+        status = {"filepath": save_path, "wallet": wallet_present, "timestamp": kst.strftime("%Y-%m-%d %H:%M:%S")}
+        if os.path.exists(self.status_file):
+            with open(self.status_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        else:
+            data = []
+        data.append(status)
+        with open(self.status_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
-    def upload_to_streamlit(self, image_path, is_wallet):
-        try:
-            with open(image_path, "rb") as f:
-                files = {"file": f}
-                data = {"is_wallet": str(is_wallet)}
-                response = requests.post(STREAMLIT_UPLOAD_URL, files=files, data=data)
-                if response.status_code == 200:
-                    print(f"[Streamlit 업로드 완료] 지갑={is_wallet}")
-                else:
-                    print(f"[Streamlit 업로드 실패] 상태코드={response.status_code}")
-        except Exception as e:
-            print(f"[Streamlit 업로드 오류] {e}")
+        print(f"사진 저장 완료: {save_path}, 지갑 여부: {wallet_present}")
 
     def closeEvent(self, event):
         self.cap.release()
