@@ -54,7 +54,7 @@ for item in status_data:
         st.warning(f"잘못된 timestamp 형식: {item.get('timestamp')} / {e}")
 
 if st.session_state.view_mode == "daily":
-    st.subheader(f"📅 {selected_date} 분실물 목록")
+    st.subheader(f"🗓️ {selected_date} 분실물 목록")
     st.button("📂 전체 목록 보기", on_click=switch_to_all)
 else:
     st.subheader("📂 전체 분실물 목록")
