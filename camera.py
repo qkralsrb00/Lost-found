@@ -30,7 +30,7 @@ class CameraApp(QWidget):
         layout.addWidget(self.btn_capture)
         self.setLayout(layout)
 
-        self.cap = cv2.VideoCapture(2)
+        self.cap = cv2.VideoCapture(1)
         if not self.cap.isOpened():
             raise RuntimeError("카메라 없음")
             sys.exit()
